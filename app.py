@@ -79,4 +79,4 @@ scaled_input = scaler.transform(input_data)
 
 if st.button("Рассчитать"):
     calories = model.predict(scaled_input)[0]
-    st.success(f"Вы сожгли примерно: {calories:.2f} ккал")streamlit run app.py
+    st.success(f"Вы сожгли примерно: {calories:.2f} ккал")
