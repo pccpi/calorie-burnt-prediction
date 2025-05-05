@@ -15,7 +15,7 @@ with open("feature_bounds.json", "r") as f:
 
 LABELS = {
     "Русский": {
-        "title": "🔥 Калькулятор сожжённых калорий",
+        "title": "Калькулятор сожжённых калорий",
         "gender": "Пол",
         "male": "Мужской",
         "female": "Женский",
@@ -34,7 +34,7 @@ LABELS = {
         "unit": "ккал"
     },
     "English": {
-        "title": "🔥 Calories Burnt Calculator",
+        "title": "Calories Burnt Calculator",
         "gender": "Gender",
         "male": "Male",
         "female": "Female",
@@ -53,7 +53,7 @@ LABELS = {
         "unit": "kcal"
     },
     "Română": {
-        "title": "🔥 Calculator de Calorii Arse",
+        "title": "Calculator de Calorii Arse",
         "gender": "Gen",
         "male": "Bărbat",
         "female": "Femeie",
