@@ -1,82 +1,160 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 import joblib
+import json
 
-# Загрузка модели и масштабатора
-model = joblib.load("model.pkl")
+st.set_page_config(page_title="🔥 Calories Burnt Predictor", layout="centered")
+
+xgb_model = joblib.load("model_xgb.pkl")
+linear_model = joblib.load("model_linear.pkl")
 scaler = joblib.load("scaler.pkl")
 
-st.set_page_config(page_title="Calories Burnt Predictor", layout="centered")
-st.title("🔥 Калькулятор сожжённых калорий")
+with open("feature_bounds.json", "r") as f:
+    bounds = json.load(f)
 
-# Пол
-gender = st.radio("Пол", ["Мужской", "Женский"])
-gender_code = 0 if gender == "Мужской" else 1
+LABELS = {
+    "Русский": {
+        "title": "🔥 Калькулятор сожжённых калорий",
+        "gender": "Пол",
+        "male": "Мужской",
+        "female": "Женский",
+        "age": "Возраст",
+        "height": "Рост (см)",
+        "weight": "Вес (кг)",
+        "duration": "Длительность тренировки (мин)",
+        "heart": "Средний пульс (уд/мин)",
+        "temp": "Средняя температура тела (°C)",
+        "button": "Рассчитать",
+        "burned": "Вы сожгли приблизительно:",
+        "model_used": "Использована модель:",
+        "range": "Диапазон: от {min:.0f} до {max:.0f}, вероятнее всего — {pred:.0f} {unit}",
+        "copy": "📋 Копировать данные и результат",
+        "download": "⬇️ Скачать результат (.txt)",
+        "unit": "ккал"
+    },
+    "English": {
+        "title": "🔥 Calories Burnt Calculator",
+        "gender": "Gender",
+        "male": "Male",
+        "female": "Female",
+        "age": "Age",
+        "height": "Height (cm)",
+        "weight": "Weight (kg)",
+        "duration": "Workout Duration (min)",
+        "heart": "Average Heart Rate (bpm)",
+        "temp": "Average Body Temperature (°C)",
+        "button": "Calculate",
+        "burned": "You have burnt approximately:",
+        "model_used": "Model used:",
+        "range": "Range: from {min:.0f} to {max:.0f}, most likely — {pred:.0f} {unit}",
+        "copy": "📋 Copy input and result",
+        "download": "⬇️ Download result (.txt)",
+        "unit": "kcal"
+    },
+    "Română": {
+        "title": "🔥 Calculator de Calorii Arse",
+        "gender": "Gen",
+        "male": "Bărbat",
+        "female": "Femeie",
+        "age": "Vârstă",
+        "height": "Înălțime (cm)",
+        "weight": "Greutate (kg)",
+        "duration": "Durata antrenamentului (min)",
+        "heart": "Puls mediu (bpm)",
+        "temp": "Temperatura medie a corpului (°C)",
+        "button": "Calculează",
+        "burned": "Ați ars aproximativ:",
+        "model_used": "Model utilizat:",
+        "range": "Interval: de la {min:.0f} la {max:.0f}, cel mai probabil — {pred:.0f} {unit}",
+        "copy": "📋 Copiază datele și rezultatul",
+        "download": "⬇️ Descarcă rezultatul (.txt)",
+        "unit": "kcal"
+    }
+}
+# Предзагрузка языка — по умолчанию русский
+default_lang = "Русский"
+t = LABELS[default_lang]
+st.title(t["title"])
 
-# Возраст
-st.subheader("Возраст")
-age = st.number_input("Введите возраст", min_value=1, max_value=130, value=25)
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("<div style='text-align: left;'><b>1</b></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<div style='text-align: right;'><b>130</b></div>", unsafe_allow_html=True)
-st.progress((age - 1) / (130 - 1))
+# Выбор языка под заголовком
+lang = st.selectbox("🌐 Язык / Language / Limba", ["Русский", "English", "Română"], index=0)
+t = LABELS[lang]
 
-# Рост
-st.subheader("Рост (см)")
-height = st.number_input("Введите рост", min_value=60, max_value=250, value=170)
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("<div style='text-align: left;'><b>60</b></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<div style='text-align: right;'><b>250</b></div>", unsafe_allow_html=True)
-st.progress((height - 60) / (250 - 60))
 
-# Вес
-st.subheader("Вес (кг)")
-weight = st.number_input("Введите вес", min_value=30, max_value=200, value=70)
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("<div style='text-align: left;'><b>30</b></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<div style='text-align: right;'><b>200</b></div>", unsafe_allow_html=True)
-st.progress((weight - 30) / (200 - 30))
+gender = st.radio(t["gender"], [t["male"], t["female"]])
+gender_code = 0 if gender == t["male"] else 1
 
-# Длительность тренировки
-st.subheader("Длительность тренировки (мин)")
-duration = st.number_input("Введите длительность", min_value=1, max_value=300, value=30)
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("<div style='text-align: left;'><b>1</b></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<div style='text-align: right;'><b>300</b></div>", unsafe_allow_html=True)
-st.progress((duration - 1) / (300 - 1))
+def input_with_bar(label, val, minv, maxv, step):
+    st.subheader(label)
+    value = st.number_input(label, min_value=minv, max_value=maxv, value=val, step=step, key=label)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"<div style='text-align: left;'>{minv}</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown(f"<div style='text-align: right;'>{maxv}</div>", unsafe_allow_html=True)
+    st.progress((value - minv) / (maxv - minv))
+    return value
 
-# Пульс
-st.subheader("Пульс (уд/мин)")
-heart_rate = st.number_input("Введите пульс", min_value=50, max_value=220, value=120)
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("<div style='text-align: left;'><b>50</b></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<div style='text-align: right;'><b>220</b></div>", unsafe_allow_html=True)
-st.progress((heart_rate - 50) / (220 - 50))
+age = input_with_bar(t["age"], 20, 1, 130, step=1)
+height = input_with_bar(t["height"], 188, 60, 250, step=1)
+weight = input_with_bar(t["weight"], 72, 30, 200, step=1)
+duration = input_with_bar(t["duration"], 52, 1, 300, step=1)
+heart_rate = input_with_bar(t["heart"], 110, 50, 220, step=1)
+body_temp = input_with_bar(t["temp"], 38.0, 35.0, 40.0, step=0.1)
 
-# Температура
-st.subheader("Температура тела (°C)")
-body_temp = st.number_input("Введите температуру", min_value=35.0, max_value=40.0, value=37.0, step=0.1)
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("<div style='text-align: left;'><b>35.0</b></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<div style='text-align: right;'><b>40.0</b></div>", unsafe_allow_html=True)
-st.progress((body_temp - 35.0) / (40.0 - 35.0))
+features = {
+    "Gender": gender_code,
+    "Age": age,
+    "Height": height,
+    "Weight": weight,
+    "Duration": duration,
+    "Heart_Rate": heart_rate,
+    "Body_Temp": body_temp
+}
 
-# Подготовка и предсказание
-input_data = np.array([[gender_code, age, height, weight, duration, heart_rate, body_temp]])
-scaled_input = scaler.transform(input_data)
+input_df = pd.DataFrame([features])
+scaled_input = scaler.transform(input_df)
 
-if st.button("Рассчитать"):
-    calories = model.predict(scaled_input)[0]
-    st.success(f"Вы сожгли примерно: {calories:.2f} ккал")
+deviation_score = 0
+for k, v in features.items():
+    min_val = bounds[k]['min']
+    max_val = bounds[k]['max']
+    if v < min_val:
+        deviation_score += (min_val - v) / (max_val - min_val)
+    elif v > max_val:
+        deviation_score += (v - max_val) / (max_val - min_val)
+
+if deviation_score == 0:
+    prediction = xgb_model.predict(scaled_input)[0]
+    model_used = "XGBoost"
+elif deviation_score >= 1.5:
+    prediction = linear_model.predict(scaled_input)[0]
+    model_used = "Linear Regression"
+else:
+    alpha = min(deviation_score / 1.5, 1)
+    xgb_pred = xgb_model.predict(scaled_input)[0]
+    lin_pred = linear_model.predict(scaled_input)[0]
+    prediction = (1 - alpha) * xgb_pred + alpha * lin_pred
+    model_used = f"Blend: {round(alpha * 100)}% Linear"
+
+if st.button(t["button"]):
+    min_val = prediction * 0.93
+    max_val = prediction * 1.07
+    st.success(f"{t['burned']} {prediction:.2f} {t['unit']}")
+    st.caption(t["range"].format(min=min_val, max=max_val, pred=prediction, unit=t["unit"]))
+
+    summary = f"""{t['burned']} {prediction:.2f} {t['unit']}
+{t['range'].format(min=min_val, max=max_val, pred=prediction, unit=t["unit"])}
+
+{t['gender']}: {gender}
+{t['age']}: {age}
+{t['height']}: {height}
+{t['weight']}: {weight}
+{t['duration']}: {duration}
+{t['heart']}: {heart_rate}
+{t['temp']}: {body_temp}
+"""
+    st.text_area(t["copy"], summary, height=250)
+    st.download_button(t["download"], summary, file_name="calories_result.txt")
+
