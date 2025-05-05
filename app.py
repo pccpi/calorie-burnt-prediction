@@ -155,6 +155,6 @@ if st.button(t["button"]):
 {t['heart']}: {heart_rate}
 {t['temp']}: {body_temp}
 """
-    st.text_area(t["copy"], summary, height=250)
+    st.text_area(t["copy"], summary, height=260)
     st.download_button(t["download"], summary, file_name="calories_result.txt")
 
