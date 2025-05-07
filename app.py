@@ -72,14 +72,16 @@ LABELS = {
         "unit": "kcal"
     }
 }
+
 # Предзагрузка языка — по умолчанию русский
 default_lang = "Русский"
 t = LABELS[default_lang]
-st.title(t["title"])
-
 # Выбор языка под заголовком
 lang = st.selectbox("🌐 Язык / Language / Limba", ["Русский", "English", "Română"], index=0)
 t = LABELS[lang]
+
+st.title(t["title"])
+
 
 
 gender = st.radio(t["gender"], [t["male"], t["female"]])
