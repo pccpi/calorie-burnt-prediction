@@ -90,11 +90,11 @@ gender_code = 0 if gender == t["male"] else 1
 def input_with_bar(label, val, minv, maxv, step):
     st.subheader(label)
     value = st.number_input(label, min_value=minv, max_value=maxv, value=val, step=step, key=label)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f"<div style='text-align: left;'>{minv}</div>", unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"<div style='text-align: right;'>{maxv}</div>", unsafe_allow_html=True)
+    st.markdown(
+    f"<div style='display: flex; justify-content: space-between;'>"
+    f"<span>{minv}</span><span>{maxv}</span>"
+    f"</div>", unsafe_allow_html=True
+)
     st.progress((value - minv) / (maxv - minv))
     return value
 
