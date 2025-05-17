@@ -4,7 +4,7 @@ import pandas as pd
 import joblib
 import json
 
-st.set_page_config(page_title="🔥 Calories Burnt Predictor", layout="centered")
+st.set_page_config(page_title="🔥 Calories Burnt Predictor 🔥", layout="centered")
 
 xgb_model = joblib.load("model_xgb.pkl")
 linear_model = joblib.load("model_linear.pkl")
