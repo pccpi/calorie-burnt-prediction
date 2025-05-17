@@ -16,6 +16,7 @@ with open("feature_bounds.json", "r") as f:
 LABELS = {
     "Русский": {
         "title": "Калькулятор сожжённых калорий",
+        "page_title": "🔥 Калькулятор сожжённых калорий 🔥",
         "gender": "Пол",
         "male": "Мужской",
         "female": "Женский",
@@ -35,6 +36,7 @@ LABELS = {
     },
     "English": {
         "title": "Calories Burnt Calculator",
+        "page_title": "🔥 Calories Burnt Calculator 🔥",
         "gender": "Gender",
         "male": "Male",
         "female": "Female",
@@ -54,6 +56,7 @@ LABELS = {
     },
     "Română": {
         "title": "Calculator de Calorii Arse",
+        "page_title": "🔥 Calculator de Calorii Arse 🔥",
         "gender": "Gen",
         "male": "Bărbat",
         "female": "Femeie",
@@ -79,6 +82,8 @@ t = LABELS[default_lang]
 # Выбор языка под заголовком
 lang = st.selectbox("🌐 Язык / Language / Limba", ["Русский", "English", "Română"], index=0)
 t = LABELS[lang]
+# Меняем заголовок вкладки браузера (не сам page_config!)
+st.markdown(f"<title>{t['page_title']}</title>", unsafe_allow_html=True)
 
 st.title(t["title"])
 
