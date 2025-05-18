@@ -140,6 +140,8 @@ else:
     prediction = (1 - alpha) * xgb_pred + alpha * lin_pred
     model_used = f"Blend: {round(alpha * 100)}% Linear"
 
+prediction = max(0, prediction)
+
 if st.button(t["button"]):
     min_val = prediction * 0.93
     max_val = prediction * 1.07
